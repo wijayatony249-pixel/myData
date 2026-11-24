@@ -152,3 +152,34 @@ async def list_workers(db: AsyncSession = Depends(get_db)):
             "last_heartbeat": w.last_heartbeat.isoformat() if w.last_heartbeat else None
         })
     return result
+
+@router.delete("/{worker_id}")
+async def delete_worker(worker_id: str, db: AsyncSession = Depends(get_db)):
+    """Menghapus Worker dari daftar klaster (berguna untuk membersihkan node yang sudah tidak dipakai)."""
+    q = await db.execute(select(Worker).where(Worker.id == worker_id))
+    worker = q.scalars().first()
+    if not worker:
+        raise HTTPException(status_code=404, detail=f"Worker {worker_id} tidak ditemukan")
+        
+    await db.delete(worker)
+    await db.commit()
+    
+    await sse_manager.broadcast("worker_removed", {"id": worker_id})
+    return {"status": "deleted", "message": f"Worker {worker_id} berhasil dihapus dari klaster"}
+
+@router.delete("")
+async def clear_workers(status: str = "DOWN", db: AsyncSession = Depends(get_db)):
+    """Membersihkan worker yang berstatus DOWN (atau semua worker jika status=ALL)."""
+    if status == "ALL":
+        q = await db.execute(select(Worker))
+    else:
+        q = await db.execute(select(Worker).where(Worker.status == "DOWN"))
+        
+    workers = q.scalars().all()
+    count = len(workers)
+    for w in workers:
+        await db.delete(w)
+    await db.commit()
+    
+    await sse_manager.broadcast("workers_cleared", {"count": count})
+    return {"status": "cleared", "message": f"{count} worker berhasil dibersihkan"}

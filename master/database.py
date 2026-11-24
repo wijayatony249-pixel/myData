@@ -62,6 +62,9 @@ else:
         def add(self, instance):
             self._s.add(instance)
 
+        async def delete(self, instance):
+            self._s.delete(instance)
+
         async def commit(self):
             self._s.commit()
 

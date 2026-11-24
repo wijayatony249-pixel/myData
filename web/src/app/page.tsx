@@ -39,6 +39,26 @@ export default function DashboardClusterPage() {
     }
   };
 
+  const handleDeleteWorker = async (workerId: string) => {
+    if (!confirm(`Hapus ${workerId} dari daftar klaster?`)) return;
+    try {
+      await fetch(`/api/master/workers/${workerId}`, { method: "DELETE" });
+      fetchWorkers();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleClearDownWorkers = async () => {
+    if (!confirm("Bersihkan seluruh worker yang sedang DOWN?")) return;
+    try {
+      await fetch("/api/master/workers?status=DOWN", { method: "DELETE" });
+      fetchWorkers();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchWorkers();
     const interval = setInterval(fetchWorkers, 4000);
@@ -178,11 +198,21 @@ export default function DashboardClusterPage() {
         </div>
       </div>
 
-      {/* Daftar Kartu 9 Worker Fisik */}
-      <h5 className="fw-bold mb-3 section-heading">
-        <i className="ri-server-line text-primary me-2"></i>
-        Status 9 Node Worker Fisik
-      </h5>
+      {/* Daftar Kartu Node Worker */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="fw-bold mb-0 section-heading">
+          <i className="ri-server-line text-primary me-2"></i>
+          Status Node Worker Klaster
+        </h5>
+        {downWorkers > 0 && (
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={handleClearDownWorkers}
+          >
+            <i className="ri-delete-bin-line me-1"></i> Bersihkan Worker DOWN ({downWorkers})
+          </button>
+        )}
+      </div>
       <div className="row g-3">
         {workers.map((w) => {
           const isDown = w.status === "DOWN";
@@ -191,9 +221,21 @@ export default function DashboardClusterPage() {
               <div className={`card worker-card h-100 ${isDown ? "worker-down" : ""}`}>
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <span className="fw-bold text-uppercase">{w.id}</span>
-                  <span className={`worker-status ${isDown ? "down" : "up"}`}>
-                    {isDown ? "DOWN" : "AKTIF"}
-                  </span>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`worker-status ${isDown ? "down" : "up"}`}>
+                      {isDown ? "DOWN" : "AKTIF"}
+                    </span>
+                    {isDown && (
+                      <button
+                        className="btn btn-sm btn-outline-danger py-0 px-2"
+                        style={{ fontSize: 11 }}
+                        title="Hapus Worker dari daftar"
+                        onClick={() => handleDeleteWorker(w.id)}
+                      >
+                        <i className="ri-delete-bin-line"></i>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="card-body">
                   <div className="small text-muted mb-2">
