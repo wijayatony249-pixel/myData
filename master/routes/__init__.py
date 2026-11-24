@@ -1,0 +1,3 @@
+"""
+Router Endpoint Master FastAPI.
+"""
