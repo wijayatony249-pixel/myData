@@ -15,9 +15,9 @@ load_dotenv(ROOT_DIR / ".env")
 CLUSTER_TOKEN = os.getenv("CLUSTER_TOKEN", "mydata-token-uas-kpt-2026")
 
 # Konfigurasi Jaringan Master & Worker
-MASTER_HOST = os.getenv("MASTER_HOST", "127.0.0.1")
+MASTER_HOST = os.getenv("MASTER_HOST", "0.0.0.0")
 MASTER_PORT = int(os.getenv("MASTER_PORT", "8000"))
-MASTER_URL = f"http://{MASTER_HOST}:{MASTER_PORT}"
+MASTER_URL = os.getenv("MASTER_URL", f"http://127.0.0.1:{MASTER_PORT}")
 WORKER_PORT = int(os.getenv("WORKER_PORT", "9000"))
 
 # Database URL
